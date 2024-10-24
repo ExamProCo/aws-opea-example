@@ -51,10 +51,20 @@ pip install huggingface_hub
 ```
 
 
-## Download the model
+# Install LFS
 
-> You should be able to download using the hugging cli but it didn't work for me
+Since we are going to
 ```sh
+curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+sudo apt-get install git-lfs
+git lfs install
+```
+
+## Download the model (llama-3.2-1b Completion)
+
+> You should be able to download using the hugging cli but it didn't work for me so we'll ignore this
+
+```sh (DONT DO)
 sudo mkdir /models
 sudo chown ubuntu:ubuntu /models
 huggingface-cli login
@@ -65,23 +75,50 @@ The other way according to the docs is to use git
 > https://huggingface.co/docs/hub/en/models-downloading
 
 ```sh
-curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
-sudo apt-get install git-lfs
-git lfs install
 git clone https://huggingface.co/meta-llama/llama-3.2-1b /models/meta-llama/llama-3.2-1b
 ```
 
-## Install and run TGI
+## Download the model (Llama-3.2-1B-Instruct Chat Completion)
 
-```sh
-sudo docker run -d -p 8080:80 \
-    -v /models:/data/models \
-    ghcr.io/huggingface/text-generation-inference:latest \
-    --model-id /data/models/meta-llama/llama-3.2-1b \
-    --port 80
+We should use this one but we will run into issues when starting TGI which will require us to modify the tokenizer_configur
+```sh (Dont use)
+git clone https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct /models/meta-llama/Llama-3.2-1B-Instruct
 ```
 
-> In hugging face they show you how to run with TGI.
+> The model you're using (meta-llama/Llama-3.2-1B-Instruct) has a tokenizer that does not have a pad_token defined. You can manually set the pad_token to the eos_token (End Of Sequence token). This is a known issue with some models and modifying the tokenizer_config.json is necessary
+
+We need to add or update the pad_token to be the name value as the eos_token 
+
+vim /models/meta-llama/Llama-3.2-1B-Instruct/tokenizer_config.json
+
+however we can also use this python script which will be less error prone:
+
+```sh
+from transformers import AutoTokenizer
+
+model_path = "/data/models/meta-llama/Llama-3.2-1B-Instruct"
+tokenizer = AutoTokenizer.from_pretrained(model_path)
+tokenizer.pad_token = tokenizer.eos_token
+tokenizer.save_pretrained(model_path)
+```
+
+##  Run TGI and Consume for Completion
+
+```sh
+sudo docker run -d \
+-p 8080:80 \
+-v /models:/data/models \
+ghcr.io/huggingface/text-generation-inference:latest \
+--model-id /data/models/meta-llama/llama-3.2-1b \
+--port 80
+```
+
+Ensure the TGI service gets into a Connected state or check for errors to fix your model issues.
+
+```sh
+sudo docker ps # get container id
+sudo docker logs <container id>
+```
 
 ```sh
 curl -X POST "http://localhost:8080/v1/completions" \
@@ -92,11 +129,28 @@ curl -X POST "http://localhost:8080/v1/completions" \
     "max_tokens": 50
 }'
 ```
+> In hugging face they show you similar commands to run
 
-> This model we are using will not work with chat/completions because its not fine tune for conversations.
+##  Run TGI and Consume for Chat Completion
+
+```sh
+sudo docker run -d \
+-p 8080:80 \
+-v /models:/data/models \
+ghcr.io/huggingface/text-generation-inference:latest \
+--model-id /data/models/meta-llama/Llama-3.2-1B-Instruct \
+--port 80
+```
 
 ``` sh
 curl -X POST "http://localhost:8080/v1/chat/completions" \
--H "Content-Type: application/json" \ 
---data '{"model": "meta-llama/Llama-3.2-1B","messages": [{"role": "user", "content": "What is the capital of France?"}]}'
+-H "Content-Type: application/json" \
+--data '{
+    "messages": [
+        {"role": "user", "content": "What is the capital of France?"},
+        {"role":"assistant","content":"The capital of France is Paris."},
+        {"role": "user", "content": "Are you sure?"}
+    ]
+}'
 ```
+
