@@ -78,6 +78,9 @@ The other way according to the docs is to use git
 git clone https://huggingface.co/meta-llama/llama-3.2-1b /models/meta-llama/llama-3.2-1b
 ```
 
+> We could possibly also use  the TGI CLI to donwload model weights as well...
+> https://huggingface.co/docs/text-generation-inference/en/basic_tutorials/using_cli
+
 ## Download the model (Llama-3.2-1B-Instruct Chat Completion)
 
 We should use this one but we will run into issues when starting TGI which will require us to modify the tokenizer_configur

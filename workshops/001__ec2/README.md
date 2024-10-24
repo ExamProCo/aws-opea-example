@@ -1,3 +1,6 @@
+https://github.com/opea-project/GenAIExamples/tree/main/ChatQnA/docker_compose/intel/cpu/xeon
+
+
 # AWS OPEA Example
 
 This is an example repo to deploy ChatQnA to an EC2 instance.
