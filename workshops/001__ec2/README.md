@@ -1,5 +1,47 @@
 https://github.com/opea-project/GenAIExamples/tree/main/ChatQnA/docker_compose/intel/cpu/xeon
 
+- m7i.4xlarge
+- 80 GB
+
+# Install Docker
+
+https://docs.docker.com/engine/install/linux-postinstall/#:~:text=If%20you%20don't%20want,members%20of%20the%20docker%20group.
+
+```
+./install_docker.sh
+```
+## Setup Docker to work with non root user
+
+```sh
+sudo groupadd docker
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+ Verify
+ 
+ ```sh
+docker run hello-world
+ ```
+
+# Clone
+
+git clone https://github.com/opea-project/GenAIExamples.git
+export HUGGINGFACEHUB_API_TOKEN="YOUR_KEY"
+export host_ip=$(hostname -I | awk '{print $1}')
+export no_proxy="localhost"
+cd GenAIExamples/ChatQnA/docker_compose/intel/cpu/xeon/
+docker compose -f compose.yaml up -d
+
+url localhost:8888/v1/chatqna \
+-H "Content-Type: application/json" \
+-d '{
+    "messages": "What is the revenue of Nike in 2023?"
+}'
+
+-------
+-------
+-------
 
 # AWS OPEA Example
 
