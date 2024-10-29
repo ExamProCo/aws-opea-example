@@ -25,7 +25,6 @@ docker run hello-world
  ```
 
 # Clone
-
 git clone https://github.com/opea-project/GenAIExamples.git
 export HUGGINGFACEHUB_API_TOKEN="YOUR_KEY"
 export host_ip=$(hostname -I | awk '{print $1}')
